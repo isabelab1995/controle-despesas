@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Controle de Despesas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="spine" aria-hidden="true">
+  <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<div class="app">
+
+  <!-- ===================== TELA DE CONFIGURAÇÃO (primeira vez) ===================== -->
+  <div class="setup-screen" id="setup-screen" hidden>
+    <div class="setup-card">
+      <h1>Controle de Despesas</h1>
+      <p>Para guardar seus lançamentos com segurança e acessar de qualquer aparelho, este site usa o <strong>Firebase</strong> (banco de dados gratuito do Google).</p>
+
+      <div class="setup-help">
+        Como configurar (leva ~3 minutos):<br>
+        1. Acesse <a href="https://console.firebase.google.com" target="_blank" rel="noopener">console.firebase.google.com</a> e crie um projeto gratuito.<br>
+        2. No projeto, vá em <strong>Compilação → Firestore Database</strong> e clique em "Criar banco de dados" (modo produção).<br>
+        3. Em <strong>Configurações do projeto → Geral</strong>, adicione um app da Web (ícone &lt;/&gt;) e copie o objeto <code>firebaseConfig</code>.<br>
+        4. Cole o objeto abaixo. Veja o <code>README.md</code> incluído para o passo a passo completo com imagens de referência e as regras de segurança recomendadas.
+      </div>
+
+      <p class="setup-error" id="setup-error" hidden style="color:#a2432b;font-size:0.85rem;"></p>
+
+      <form id="setup-form">
+        <div class="field">
+          <label for="setup-config">Cole aqui o firebaseConfig</label>
+          <textarea id="setup-config" placeholder='{
+  "apiKey": "...",
+  "authDomain": "...",
+  "projectId": "...",
+  "storageBucket": "...",
+  "messagingSenderId": "...",
+  "appId": "..."
+}' required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Conectar e continuar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== TELA DE CARREGAMENTO ===================== -->
+  <div class="loading-screen" id="loading-screen" hidden>
+    <div>Abrindo o livro-caixa…</div>
+  </div>
+
+  <!-- ===================== TELA DE IMPORTAÇÃO INICIAL ===================== -->
+  <div class="setup-screen" id="import-screen" hidden>
+    <div class="setup-card">
+      <h1>Importar histórico</h1>
+      <p>Encontrei o histórico da sua planilha (2023 a 2026) pronto para importar para o seu banco de dados. Isso só acontece uma vez.</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="btn-import">Importar histórico</button>
+        <button class="btn btn-ghost" id="btn-skip-import">Começar vazio</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== APP PRINCIPAL ===================== -->
+  <div id="app-root" hidden>
+
+    <header class="cover">
+      <div class="wrap">
+        <div class="cover-row">
+          <div>
+            <span class="eyebrow">Livro-caixa pessoal</span>
+            <h1>Controle de Despesas</h1>
+          </div>
+          <div class="cover-actions">
+            <button class="icon-btn" id="btn-export">Exportar CSV</button>
+            <button class="icon-btn" id="btn-logout">Trocar banco de dados</button>
+          </div>
+        </div>
+        <nav class="month-tabs" id="month-tabs" aria-label="Selecionar mês"></nav>
+      </div>
+    </header>
+
+    <main class="sheet">
+      <div class="wrap">
+
+        <section class="balance-row" aria-label="Resumo do mês">
+          <div class="card saldo">
+            <span class="label" id="card-saldo-label">Saldo</span>
+            <span class="value" id="card-saldo">R$ 0,00</span>
+          </div>
+          <div class="card entradas">
+            <span class="label">Entradas</span>
+            <span class="value" id="card-entradas">R$ 0,00</span>
+          </div>
+          <div class="card saidas">
+            <span class="label">Saídas</span>
+            <span class="value" id="card-saidas">R$ 0,00</span>
+          </div>
+        </section>
+
+        <section class="charts-row" aria-label="Gráficos">
+          <div class="chart-card">
+            <div class="section-title">Saldo acumulado <small>histórico completo</small></div>
+            <canvas id="chart-tendencia" height="240"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="section-title">Saídas por categoria <small>mês selecionado</small></div>
+            <canvas id="chart-categorias" height="240"></canvas>
+          </div>
+        </section>
+
+        <section aria-label="Lançamentos">
+          <div class="section-title">Lançamentos</div>
+
+          <div class="filters">
+            <select id="f-tipo-filter">
+              <option value="">Todos os tipos</option>
+              <option value="Entrada">Entrada</option>
+              <option value="Saída">Saída</option>
+            </select>
+            <select id="f-origem-filter">
+              <option value="">Todas as origens</option>
+              <option value="Bela">Bela</option>
+              <option value="Thomas">Thomas</option>
+              <option value="Bela/Thomas">Bela/Thomas</option>
+            </select>
+            <select id="f-categoria">
+              <option value="">Todas as categorias</option>
+            </select>
+            <input type="text" id="f-busca" placeholder="Buscar categoria ou origem…" />
+            <div class="spacer"></div>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="ledger">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Categoria</th>
+                  <th>Origem</th>
+                  <th>Tipo</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Valor</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="ledger-body"></tbody>
+            </table>
+          </div>
+
+          <div class="pagination">
+            <button id="btn-prev">← Anterior</button>
+            <span id="page-info"></span>
+            <button id="btn-next">Próxima →</button>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <button class="fab" id="fab-add" title="Novo lançamento" aria-label="Novo lançamento">+</button>
+  </div>
+
+</div>
+
+<!-- ===================== MODAL: novo/editar lançamento ===================== -->
+<div class="modal-overlay" id="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <h2 id="modal-title">Novo lançamento</h2>
+    <form id="modal-form">
+      <div class="field">
+        <label>Tipo</label>
+        <div class="type-toggle">
+          <button type="button" id="btn-tipo-entrada" class="entrada" aria-pressed="false">Entrada</button>
+          <button type="button" id="btn-tipo-saida" class="saida" aria-pressed="true">Saída</button>
+        </div>
+        <input type="hidden" id="f-tipo" value="Saída" />
+      </div>
+
+      <div class="field">
+        <label for="f-data">Data</label>
+        <input type="date" id="f-data" required />
+      </div>
+
+      <div class="field">
+        <label for="f-valor">Valor (R$)</label>
+        <input type="number" id="f-valor" step="0.01" min="0.01" required />
+      </div>
+
+      <div class="field">
+        <label for="f-categoria-select">Categoria</label>
+        <select id="f-categoria-select"></select>
+        <input type="text" id="f-categoria-outra" placeholder="Nome da categoria" style="margin-top:8px;" hidden />
+      </div>
+
+      <div class="field">
+        <label for="f-origem">Origem</label>
+        <select id="f-origem">
+          <option value="Bela">Bela</option>
+          <option value="Thomas">Thomas</option>
+          <option value="Bela/Thomas">Bela/Thomas</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="f-pago">Status</label>
+        <select id="f-pago">
+          <option value="Sim">Pago / recebido</option>
+          <option value="Não">Pendente</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="modal-close">Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="btn-save-modal">Salvar</button>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost btn-danger" id="btn-delete-modal" hidden style="width:100%;">Excluir lançamento</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase (compat SDK — sem necessidade de build) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+<script src="dados_iniciais.js"></script>
+<script src="app.js"></script>
+
+<script>
+  // popular <select> de categoria do modal
+  document.addEventListener("DOMContentLoaded", () => {
+    const sel = document.getElementById("f-categoria-select");
+    CATEGORIAS.forEach((c) => {
+      const opt = document.createElement("option");
+      opt.value = c; opt.textContent = c;
+      sel.appendChild(opt);
+    });
+    const outra = document.createElement("option");
+    outra.value = "__outra__"; outra.textContent = "Outra (digitar)";
+    sel.appendChild(outra);
+  });
+</script>
+
+</body>
+</html>
