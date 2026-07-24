@@ -77,6 +77,7 @@
             <h1>Controle de Despesas</h1>
           </div>
           <div class="cover-actions">
+            <button class="icon-btn" id="btn-contas">Contas bancárias</button>
             <button class="icon-btn" id="btn-export">Exportar CSV</button>
             <button class="icon-btn" id="btn-logout">Trocar banco de dados</button>
           </div>
@@ -87,6 +88,16 @@
 
     <main class="sheet">
       <div class="wrap">
+
+        <div id="migrate-banner-slot"></div>
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+          <div class="status-switch" id="status-switch" role="group" aria-label="Filtrar por situação">
+            <button data-status="Real" class="active">Real</button>
+            <button data-status="Projeção">Projetado</button>
+            <button data-status="">Todos</button>
+          </div>
+        </div>
 
         <section class="balance-row" aria-label="Resumo do mês">
           <div class="card saldo">
@@ -114,6 +125,24 @@
           </div>
         </section>
 
+        <section aria-label="Resumo mensal" style="margin-bottom:28px;">
+          <div class="section-title">Resumo mensal <small>como na planilha — clique num mês para abri-lo</small></div>
+          <div class="summary-scroll">
+            <table class="summary-table">
+              <thead>
+                <tr>
+                  <th>Mês</th>
+                  <th>Entradas</th>
+                  <th>Saídas</th>
+                  <th>Saldo do mês</th>
+                  <th>Saldo acumulado</th>
+                </tr>
+              </thead>
+              <tbody id="summary-body"></tbody>
+            </table>
+          </div>
+        </section>
+
         <section aria-label="Lançamentos">
           <div class="section-title">Lançamentos</div>
 
@@ -132,6 +161,18 @@
             <select id="f-categoria">
               <option value="">Todas as categorias</option>
             </select>
+            <select id="f-conta-filter">
+              <option value="">Todas as contas</option>
+            </select>
+            <select id="f-forma-filter">
+              <option value="">Todas as formas</option>
+              <option value="Pix">Pix</option>
+              <option value="Boleto">Boleto</option>
+              <option value="Débito">Débito</option>
+              <option value="Crédito">Crédito</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Outro">Outro</option>
+            </select>
             <input type="text" id="f-busca" placeholder="Buscar categoria ou origem…" />
             <div class="spacer"></div>
           </div>
@@ -143,8 +184,11 @@
                   <th>Data</th>
                   <th>Categoria</th>
                   <th>Origem</th>
+                  <th>Conta</th>
+                  <th>Forma</th>
                   <th>Tipo</th>
-                  <th>Status</th>
+                  <th>Pago</th>
+                  <th>Situação</th>
                   <th style="text-align:right;">Valor</th>
                   <th></th>
                 </tr>
@@ -208,11 +252,40 @@
       </div>
 
       <div class="field">
-        <label for="f-pago">Status</label>
+        <label for="f-conta-select">Conta bancária</label>
+        <select id="f-conta-select"></select>
+        <input type="text" id="f-conta-outra" placeholder="Nome do banco/conta" style="margin-top:8px;" hidden />
+      </div>
+
+      <div class="field">
+        <label for="f-forma">Forma de pagamento</label>
+        <select id="f-forma">
+          <option value="">Não informado</option>
+          <option value="Pix">Pix</option>
+          <option value="Boleto">Boleto</option>
+          <option value="Débito">Débito</option>
+          <option value="Crédito">Crédito</option>
+          <option value="Dinheiro">Dinheiro</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="f-pago">Pago / recebido?</label>
         <select id="f-pago">
           <option value="Sim">Pago / recebido</option>
           <option value="Não">Pendente</option>
         </select>
+      </div>
+
+      <div class="field">
+        <label>Situação</label>
+        <div class="type-toggle">
+          <button type="button" id="btn-status-real" aria-pressed="true">Real</button>
+          <button type="button" id="btn-status-projecao" aria-pressed="false">Projetado</button>
+        </div>
+        <input type="hidden" id="f-status" value="Real" />
+        <p class="hint">Projetado = previsão futura, ainda não confirmada no banco.</p>
       </div>
 
       <div class="modal-actions">
@@ -223,6 +296,31 @@
         <button type="button" class="btn btn-ghost btn-danger" id="btn-delete-modal" hidden style="width:100%;">Excluir lançamento</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ===================== MODAL: contas bancárias ===================== -->
+<div class="modal-overlay" id="contas-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="contas-title" style="max-width:560px;">
+    <h2 id="contas-title">Contas bancárias</h2>
+    <p class="hint" style="margin-top:-8px;">
+      Cadastre o saldo inicial de cada conta na data em que você começou a controlar por aqui.
+      O site soma os lançamentos <strong>reais</strong> feitos naquela conta a partir dessa data
+      para calcular o saldo — compare com o saldo real do banco para conferir se bateu.
+    </p>
+
+    <div id="contas-list"></div>
+
+    <form id="conta-form" class="new-account-form">
+      <input type="text" id="nc-nome" placeholder="Nome do banco/conta" required />
+      <input type="number" id="nc-saldo" step="0.01" placeholder="Saldo inicial" required />
+      <input type="date" id="nc-data" required />
+      <button type="submit" class="btn btn-primary">Adicionar</button>
+    </form>
+
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="contas-close" style="width:100%;">Fechar</button>
+    </div>
   </div>
 </div>
 
@@ -249,6 +347,17 @@
     const outra = document.createElement("option");
     outra.value = "__outra__"; outra.textContent = "Outra (digitar)";
     sel.appendChild(outra);
+
+    const contaSel = document.getElementById("f-conta-select");
+    contaSel.innerHTML = '<option value="">Não informado</option>';
+    CONTAS_PADRAO.forEach((c) => {
+      const opt = document.createElement("option");
+      opt.value = c; opt.textContent = c;
+      contaSel.appendChild(opt);
+    });
+    const contaOutra = document.createElement("option");
+    contaOutra.value = "__outra__"; contaOutra.textContent = "Outra (digitar)";
+    contaSel.appendChild(contaOutra);
   });
 </script>
 

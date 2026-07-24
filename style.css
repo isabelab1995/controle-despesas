@@ -305,6 +305,159 @@ button {
 }
 .chart-card canvas { max-height: 240px; }
 
+/* ---------- seletor de situação (Real / Projeção / Todos) ---------- */
+
+.status-switch {
+  display: flex;
+  gap: 4px;
+  background: var(--paper-dim);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 3px;
+}
+.status-switch button {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 5px 12px;
+  border-radius: 16px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.status-switch button.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ---------- resumo mensal (tabela estilo planilha) ---------- */
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.summary-table th, .summary-table td {
+  padding: 8px 12px;
+  font-size: 0.83rem;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+}
+.summary-table th:first-child, .summary-table td:first-child { text-align: left; }
+.summary-table th {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-soft);
+  background: var(--paper-dim);
+  position: sticky;
+  top: 0;
+}
+.summary-table td { font-family: var(--font-mono); }
+.summary-table td:first-child { font-family: var(--font-body); font-weight: 600; }
+.summary-table tbody tr { cursor: pointer; }
+.summary-table tbody tr:hover { background: var(--gold-soft); }
+.summary-table tbody tr.current { background: var(--gold-soft); box-shadow: inset 3px 0 0 var(--gold); }
+.summary-table .pos { color: var(--green); }
+.summary-table .neg { color: var(--rust); }
+.summary-scroll { max-height: 320px; overflow-y: auto; border-radius: var(--radius); }
+
+/* ---------- contas bancárias ---------- */
+
+.account-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.account-card .acc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.account-card .acc-head strong { font-family: var(--font-display); font-size: 1.02rem; }
+.account-card .acc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.account-card .acc-grid div .label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-soft);
+  display: block;
+  margin-bottom: 2px;
+}
+.account-card .acc-grid div .num { font-family: var(--font-mono); font-size: 0.95rem; }
+.account-card .diff-ok { color: var(--green); font-weight: 600; }
+.account-card .diff-bad { color: var(--rust); font-weight: 600; }
+.account-card .acc-conf-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.account-card .acc-conf-row input {
+  flex: 1;
+  min-width: 140px;
+  font-family: var(--font-mono);
+  padding: 7px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--white);
+}
+.account-card .acc-remove {
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+}
+.account-card .acc-remove:hover { color: var(--rust); }
+
+.new-account-form {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr auto;
+  gap: 8px;
+  margin-top: 16px;
+}
+@media (max-width: 560px) {
+  .new-account-form { grid-template-columns: 1fr 1fr; }
+}
+.new-account-form input {
+  font-family: var(--font-body);
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--white);
+}
+
+.migrate-banner {
+  background: var(--gold-soft);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.migrate-banner button {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
 /* ---------- filtros ---------- */
 
 .filters {
@@ -391,6 +544,18 @@ button {
 }
 .stamp.pago { color: var(--green); }
 .stamp.pendente { color: var(--rust); }
+
+.badge-status {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+.badge-status.real { background: var(--green-soft); color: var(--green); }
+.badge-status.projecao { background: var(--gold-soft); color: var(--gold); }
 
 .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
 .row-actions button {
@@ -524,6 +689,8 @@ button {
 }
 .type-toggle button[aria-pressed="true"].entrada { background: var(--green-soft); color: var(--green); border-color: var(--green); }
 .type-toggle button[aria-pressed="true"].saida { background: var(--rust-soft); color: var(--rust); border-color: var(--rust); }
+.type-toggle button[aria-pressed="true"]#btn-status-real { background: var(--green-soft); color: var(--green); border-color: var(--green); }
+.type-toggle button[aria-pressed="true"]#btn-status-projecao { background: var(--gold-soft); color: var(--gold); border-color: var(--gold); }
 
 .modal-actions {
   display: flex;

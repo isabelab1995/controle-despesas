@@ -4,6 +4,29 @@ Site para controlar suas despesas e receitas pessoais, feito a partir da sua pla
 `Controle_de_Despesas_Isabela_v2.xlsx`. Funciona no celular e no computador, guarda os
 dados na nuvem (Firebase, gratuito) e pode ser publicado de graça no GitHub Pages.
 
+## Atualização — contas, forma de pagamento e resumo mensal
+
+Se você já tinha publicado a primeira versão do site, basta **substituir os 4 arquivos**
+(`index.html`, `style.css`, `app.js`, `dados_iniciais.js`) no seu repositório do GitHub pelos
+novos — o Firebase e os dados que você já importou continuam intactos. Novidades:
+
+- **Conta bancária** em cada lançamento (Nubank, Sicoob, Dinheiro etc. — ou digite outra).
+- **Forma de pagamento**: Pix, Boleto, Débito, Crédito ou Dinheiro.
+- **Situação Real / Projetado**: um seletor no topo do painel filtra o que é lançamento
+  confirmado e o que é projeção futura — o painel, os gráficos e o resumo mensal recalculam
+  automaticamente.
+- **Contas bancárias**: botão "Contas bancárias" no topo do site. Cadastre o saldo inicial de
+  cada conta e a data; o site soma os lançamentos reais daquela conta a partir dali e mostra o
+  saldo calculado. Você digita o saldo que aparece no extrato do banco e o site avisa se bate.
+- **Resumo mensal**: tabela com Entradas, Saídas, Saldo do mês e Saldo acumulado — igual à aba
+  "Resumo" da sua planilha. Clique num mês da tabela para abri-lo no painel.
+
+Ao abrir o site pela primeira vez depois de atualizar, um aviso amarelo vai aparecer oferecendo
+completar automaticamente o histórico já importado com as informações de conta, forma de
+pagamento e situação que estavam na planilha (a maior parte dos lançamentos antigos já tem esses
+dados — alguns ficarão como "não informado" porque a planilha também não tinha essa informação
+para eles).
+
 ## O que já vem pronto
 
 - Todo o histórico de lançamentos "Real" da aba **Lançamentos** da sua planilha
